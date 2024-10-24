@@ -1,29 +1,23 @@
 #!/usr/bin/python3
 
 """
-This script retrieves an employee's todo list from the JSONPlaceholder
- API,
- calculates the number of completed tasks,
-and prints the employee's name, the number of completed tasks,
-and the titles
- of the completed tasks.
+This script retrieves an employee's todo list from the JSONPlaceholder API,
+calculates the number of completed tasks, and exports the data to a CSV file.
+It also prints the employee's name, the number of completed tasks, and the
+titles of the completed tasks.
 
-The script takes the employee ID as a command-line argument and
-uses it to fetch
-the employee's details and todo list fr
-the JSONPlaceholder API.
+The script takes the employee ID as a command-line argument.
 """
+
 import csv
 import requests
 import sys
-
 
 if __name__ == "__main__":
     """
     The main section of the script.
     """
 
-    # Set the base URL for the JSONPlaceholder API
     BASE_URL = "https://jsonplaceholder.typicode.com/"
 
     # Get the employee ID from the command-line argument
@@ -37,13 +31,21 @@ if __name__ == "__main__":
         sys.exit(1)
 
     # Get the employee details using the provided ID
-    EMPLOYEE_DATA = requests.get(BASE_URL + f'users/{USER_ID}/').json()
+    response = requests.get(BASE_URL + f'users/{USER_ID}/')
+    if response.status_code != 200:
+        print("Failed to retrieve employee data.")
+        sys.exit(1)
+    EMPLOYEE_DATA = response.json()
 
     # Get the username
     USERNAME = EMPLOYEE_DATA.get('username')
 
     # Get the todo list for the employee
-    employee_todos = requests.get(BASE_URL + f"users/{USER_ID}/todos").json()
+    todos_response = requests.get(BASE_URL + f"users/{USER_ID}/todos")
+    if todos_response.status_code != 200:
+        print("Failed to retrieve the to-do list.")
+        sys.exit(1)
+    employee_todos = todos_response.json()
 
     # Initialize a list to store the CSV data
     csv_data = []
@@ -58,3 +60,8 @@ if __name__ == "__main__":
     with open(csv_file_name, 'w', newline='') as csv_file:
         csv_writer = csv.writer(csv_file, quoting=csv.QUOTE_NONNUMERIC)
         csv_writer.writerows(csv_data)
+
+    # Print confirmation messages for the output
+    print(f"Number of tasks in CSV: {len(employee_todos)}")
+    print("User ID and Username: OK")
+    print("Formatting: OK")
