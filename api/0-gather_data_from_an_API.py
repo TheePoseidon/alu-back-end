@@ -2,18 +2,15 @@
 
 """
 This script retrieves an employee's todo list from the JSONPlaceholder API,
- calculates the number
- of completed tasks,
-and prints the employee's name, the number of completed tasks, and the titles
- of the completed tasks.
+calculates the number of completed tasks, and prints the employee's name,
+the number of completed tasks, and the titles of the completed tasks.
 
-The script takes the employee ID as a command-line argument and uses
- it to fetch the employee's details and todo list fr
-the JSONPlaceholder API.
+The script takes the employee ID as a command-line argument and uses it to fetch
+the employee's details and todo list from the JSONPlaceholder API.
 """
+
 import requests
 import sys
-
 
 if __name__ == "__main__":
     """
@@ -23,6 +20,7 @@ if __name__ == "__main__":
     # Set the base URL for the JSONPlaceholder API
     BASE_URL = "https://jsonplaceholder.typicode.com/"
 
+    # Get the employee ID from the command-line argument
     try:
         USER_ID = int(sys.argv[1])
     except IndexError:
@@ -33,34 +31,35 @@ if __name__ == "__main__":
         sys.exit(1)
 
     # Get the user details using the provided ID from the command-line argument
-    employees = requests.get(BASE_URL + f"/users/{USER_ID}/").json()
+    response = requests.get(BASE_URL + f"users/{USER_ID}/")
+    if response.status_code != 200:
+        print(f"Failed to retrieve employee data for user ID {USER_ID}")
+        sys.exit(1)
+
+    employee = response.json()
 
     # Extract the employee's name
-    EMPLOYEE_NAME = employees.get('name')
+    EMPLOYEE_NAME = employee.get('name')
+    if not EMPLOYEE_NAME:
+        print(f"Employee name not found for user ID {USER_ID}")
+        sys.exit(1)
 
     # Get the todo list for the employee
-    EMPLOY_TODO = requests.get(BASE_URL + f"/users/{USER_ID}/todos").json()
+    todos_response = requests.get(BASE_URL + f"users/{USER_ID}/todos")
+    if todos_response.status_code != 200:
+        print(f"Failed to retrieve todo list for user ID {USER_ID}")
+        sys.exit(1)
 
-    # Initialize a dictionary to store the todo items and their completion
-    # status
-    TOTAL_NUMBER_OF_TASKS = {}
-
-    # Iterate through the todo list and add the title and completion status to
-    # the dictionary
-    for todo in EMPLOY_TODO:
-        TOTAL_NUMBER_OF_TASKS.update(
-            {todo.get("title"): todo.get("completed")})
+    todos = todos_response.json()
 
     # Calculate the number of completed tasks
-    NUMBER_OF_DONE_TASKS = len(
-        [k for k, v in TOTAL_NUMBER_OF_TASKS.items() if v is True])
+    completed_tasks = [todo for todo in todos if todo.get('completed')]
+    total_tasks = len(todos)
+    num_completed_tasks = len(completed_tasks)
 
-    # Print the employee's name, the number of completed tasks, and the total
-    # number of tasks
-    print("Employee {} is done with tasks({}/{}): ".format(EMPLOYEE_NAME,
-          NUMBER_OF_DONE_TASKS, len(TOTAL_NUMBER_OF_TASKS)))
+    # Print the employee's name, the number of completed tasks, and the total number of tasks
+    print(f"Employee {EMPLOYEE_NAME} is done with tasks ({num_completed_tasks}/{total_tasks}):")
 
-    # Iterate through the todo list and print the titles of the completed tasks
-    for key, val in TOTAL_NUMBER_OF_TASKS.items():
-        if val is True:
-            print("\t {}".format(key))
+    # Print the titles of the completed tasks
+    for task in completed_tasks:
+        print(f"\t {task.get('title')}")
