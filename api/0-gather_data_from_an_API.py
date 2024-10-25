@@ -63,3 +63,4 @@ if __name__ == "__main__":
     # Print the titles of the completed tasks
     for task in completed_tasks:
         print(f"\t {task.get('title')}")
+
